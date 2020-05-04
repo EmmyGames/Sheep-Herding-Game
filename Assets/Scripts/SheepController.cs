@@ -19,7 +19,7 @@ public class SheepController : MonoBehaviour
     bool inCoRoutine = false;
     
     //Chase variables
-    float chaseSpeed = 10.0f;
+    float chaseSpeed = 12.0f;
     float runThisLong = 4.0f;
     bool beingChased = false;
     Vector3 playerPos;
@@ -52,9 +52,11 @@ public class SheepController : MonoBehaviour
     {
         //Time between generating new path
         timeForNewPath = Random.Range(2, 7);
-        //Get random location between -10 and 10 in the x and z directions
-        float x = Random.Range(-100, 100);
-        float z = Random.Range(-100, 100);
+        //Get random location
+        //Walkable area is only between -60 and 60 but this gives more chances 
+        //for the sheep to spread out, and not stick to the middle of the play area
+        float x = Random.Range(-120, 70);
+        float z = Random.Range(-120, 120);
         //Return position of new point to path towards
         Vector3 pos = new Vector3(x, 0.0f, z);
         return pos;
@@ -72,6 +74,7 @@ public class SheepController : MonoBehaviour
             GetNewPath();
             validPath = nma.CalculatePath(target, path);
         }
+        //validPath = transform.position
         inCoRoutine = false;
     }
     void GetNewPath()
@@ -86,10 +89,17 @@ public class SheepController : MonoBehaviour
         //Only run away from player
         if (other.gameObject.tag == "Player")
         {
-            //Makes conditional true in Update function for sheep to run
-            beingChased = true;
-            playerPos = other.transform.position;
-            StartCoroutine(RunAway(runThisLong));
+            if (Vector3.Distance(transform.position, other.transform.position) > 3.0f)
+            {
+                playerPos = other.transform.position;
+            }
+            //Only restart run when it ends
+            if (!beingChased)
+            {
+                //Makes conditional true in Update function for sheep to run
+                beingChased = true;
+                StartCoroutine(RunAway(runThisLong));
+            }
         }
     }
 
