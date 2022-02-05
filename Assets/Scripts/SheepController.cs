@@ -1,133 +1,120 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class SheepController : MonoBehaviour
 {
-    //Animator
-    private Animator anim;
-    Vector3 lastPosition = Vector3.zero;
-    float speed = 0f;
+	public float timeForNewPath;
+	//Animator
+	private Animator _anim;
+	private bool _beingChased;
 
-    //AI variables
-    NavMeshAgent nma;
-    NavMeshPath path;
-    Vector3 target;
-    public float timeForNewPath;
-    bool validPath;
-    bool inCoRoutine = false;
-    
-    //Chase variables
-    float chaseSpeed = 12.0f;
-    float runThisLong = 4.0f;
-    bool beingChased = false;
-    Vector3 playerPos;
+	//Chase variables
+	private const float CHASE_SPEED = 12.0f;
+	private bool _inCoRoutine;
+	private Vector3 _lastPosition = Vector3.zero;
 
-    private void Awake()
-    {
-        anim = GetComponent<Animator>();
-    }
+	//AI variables
+	private NavMeshAgent _nma;
+	private NavMeshPath _path;
+	private Vector3 _playerPos;
+	private const float RUN_THIS_LONG = 4.0f;
+	private float _speed;
+	private Vector3 _target;
+	private bool _validPath;
+	private static readonly int Speed = Animator.StringToHash("speed");
 
-    private void Start()
-    {
-        nma = GetComponent<NavMeshAgent>();
-        path = new NavMeshPath();
-    }
-    private void Update()
-    {
-        UpdateAnimation();
-        if (!inCoRoutine)
-        {
-            StartCoroutine(WalkRandom(timeForNewPath));
-        }
-        if(beingChased)
-        {
-            CalculateRun(playerPos);
-        }
-    }
-    
-    //Walk Randomly ---------------------------------------------------------
-    Vector3 GetNewRandomPosition()
-    {
-        //Time between generating new path
-        timeForNewPath = Random.Range(2, 7);
-        //Get random location
-        //Walkable area is only between -60 and 60 but this gives more chances 
-        //for the sheep to spread out, and not stick to the middle of the play area
-        float x = Random.Range(-120, 70);
-        float z = Random.Range(-120, 120);
-        //Return position of new point to path towards
-        Vector3 pos = new Vector3(x, 0.0f, z);
-        return pos;
-    }
+	private void Awake() => _anim = GetComponent<Animator>();
 
-    IEnumerator WalkRandom(float time)
-    {
-        inCoRoutine = true;
-        GetNewPath();
-        validPath = nma.CalculatePath(target, path);
-        yield return new WaitForSeconds(time);
-        while(!validPath)
-        {
-            yield return new WaitForSeconds(0.01f);
-            GetNewPath();
-            validPath = nma.CalculatePath(target, path);
-        }
-        //validPath = transform.position
-        inCoRoutine = false;
-    }
-    void GetNewPath()
-    {
-        target = GetNewRandomPosition();
-        nma.SetDestination(target);
-    }
-    
-    //Run away from player ---------------------------------------------------
-    private void OnTriggerStay(Collider other)
-    {
-        //Only run away from player
-        if (other.gameObject.tag == "Player")
-        {
-            if (Vector3.Distance(transform.position, other.transform.position) > 3.0f)
-            {
-                playerPos = other.transform.position;
-            }
-            //Only restart run when it ends
-            if (!beingChased)
-            {
-                //Makes conditional true in Update function for sheep to run
-                beingChased = true;
-                StartCoroutine(RunAway(runThisLong));
-            }
-        }
-    }
+	private void Start()
+	{
+		_nma = GetComponent<NavMeshAgent>();
+		_path = new NavMeshPath();
+	}
+	private void Update()
+	{
+		UpdateAnimation();
+		if (!_inCoRoutine) StartCoroutine(WalkRandom(timeForNewPath));
+		if (_beingChased) CalculateRun(_playerPos);
+	}
 
-    IEnumerator RunAway(float time)
-    {
-        inCoRoutine = true;
-        //Wait time seconds before the sheep stops being chased
-        yield return new WaitForSeconds(time);
-        beingChased = false;
-        inCoRoutine = false;
-    }
+	//Run away from player ---------------------------------------------------
+	private void OnTriggerStay(Collider other)
+	{
+		//Only run away from player
+		if (!other.gameObject.CompareTag("Player")) return;
+		if (Vector3.Distance(transform.position, other.transform.position) > 3.0f)
+			_playerPos = other.transform.position;
+		//Only restart run when it ends
+		if (_beingChased) return;
+		//Makes conditional true in Update function for sheep to run
+		_beingChased = true;
+		StartCoroutine(RunAway(RUN_THIS_LONG));
+	}
 
-    void CalculateRun(Vector3 playerPosition)
-    {
-        //Get distance of sheep from player
-        Vector3 distance = transform.position - playerPosition;
-        transform.forward = distance;
-        Vector3 moveForward = new Vector3(0.0f, 0.0f, chaseSpeed * Time.deltaTime);
-        transform.Translate(moveForward);
-    }
+	//Walk Randomly ---------------------------------------------------------
+	private Vector3 GetNewRandomPosition()
+	{
+		//Time between generating new path
+		timeForNewPath = Random.Range(2, 7);
+		//Get random location
+		//Walkable area is only between -60 and 60 but this gives more chances 
+		//for the sheep to spread out, and not stick to the middle of the play area
+		float x = Random.Range(-120, 70);
+		float z = Random.Range(-120, 120);
+		//Return position of new point to path towards
+		var pos = new Vector3(x, 0.0f, z);
+		return pos;
+	}
 
-    void UpdateAnimation()
-    {
-        //Get speed of sheep
-        float movementPerFrame = Vector3.Distance(lastPosition, transform.position);
-        speed = movementPerFrame / Time.deltaTime;
-        lastPosition = transform.position;
-        //Set speed to animation variable
-        anim.SetFloat("speed", speed);
-    }
+	private IEnumerator WalkRandom(float time)
+	{
+		_inCoRoutine = true;
+		GetNewPath();
+		_validPath = _nma.CalculatePath(_target, _path);
+		yield return new WaitForSeconds(time);
+		while (!_validPath)
+		{
+			yield return new WaitForSeconds(0.01f);
+			GetNewPath();
+			_validPath = _nma.CalculatePath(_target, _path);
+		}
+		//validPath = transform.position
+		_inCoRoutine = false;
+	}
+	private void GetNewPath()
+	{
+		_target = GetNewRandomPosition();
+		_nma.SetDestination(_target);
+	}
+
+	private IEnumerator RunAway(float time)
+	{
+		_inCoRoutine = true;
+		//Wait time seconds before the sheep stops being chased
+		yield return new WaitForSeconds(time);
+		_beingChased = false;
+		_inCoRoutine = false;
+	}
+
+	private void CalculateRun(Vector3 playerPosition)
+	{
+		//Get distance of sheep from player
+		var transform1 = transform;
+		var distance = transform1.position - playerPosition;
+		transform1.forward = distance;
+		var moveForward = new Vector3(0.0f, 0.0f, CHASE_SPEED * Time.deltaTime);
+		transform.Translate(moveForward);
+	}
+
+	private void UpdateAnimation()
+	{
+		//Get speed of sheep
+		var position = transform.position;
+		var movementPerFrame = Vector3.Distance(_lastPosition, position);
+		_speed = movementPerFrame / Time.deltaTime;
+		_lastPosition = position;
+		//Set speed to animation variable
+		_anim.SetFloat(Speed, _speed);
+	}
 }

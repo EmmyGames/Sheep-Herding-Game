@@ -5219,6 +5219,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   timerText: {fileID: 54056179}
+  startingTime: 51
 --- !u!114 &425701418
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16523,7 +16524,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mouseSens: 100
-  playerbody: {fileID: 1542855242}
+  player: {fileID: 1542855242}
   yRotation: 0
 --- !u!4 &1340578186 stripped
 Transform:

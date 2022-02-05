@@ -1,14 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using TMPro;
 using UnityEngine;
-using TMPro;
 
 public class GameOver : MonoBehaviour
 {
-    public TextMeshProUGUI scoreText;
+	public TextMeshProUGUI scoreText;
 
-    void Start()
-    {
-        scoreText.text = "You Scored " + GameState.score + " points!";
-    }
+	private void Start() => scoreText.text = "You Scored " + GameState.Score + " points!";
 }
